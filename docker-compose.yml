@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: fiap-hackaton-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: fiap_hackaton
+      MYSQL_USER: fiap
+      MYSQL_PASSWORD: fiap123
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - fiap-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build: .
+    container_name: fiap-hackaton-app
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/fiap_hackaton
+      SPRING_DATASOURCE_USERNAME: fiap
+      SPRING_DATASOURCE_PASSWORD: fiap123
+    ports:
+      - "8080:8080"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - fiap-network
+
+volumes:
+  mysql_data:
+
+networks:
+  fiap-network:
+    driver: bridge
